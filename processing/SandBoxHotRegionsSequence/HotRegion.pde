@@ -4,7 +4,7 @@ class HotRegion {
 
     int THRESHOLD = 5; //+- 5mm
 
-    boolean VERBOSE = false;
+    boolean VERBOSE = true;
 
     String name;
     int x, y, w, h;

@@ -1,16 +1,17 @@
 import SimpleOpenNI.*;
-import deadpixel.keystone.*;
 
 SimpleOpenNI  openni;
+
+import deadpixel.keystone.*;
 
 Keystone ks;
 CornerPinSurface surface;
 
 PGraphics offscreen;
-
 SandboxCalibrator calibrator;
 
-SandboxImageLayer imageLayer, catImageLayer, catShitImageLayer;
+HotRegion hot[] = new HotRegion[5];
+int currentRegion = 0;
 
 void setup() {
     fullScreen(P3D, 2); // 2 - second screen (projector) must be in extend mode
@@ -31,13 +32,13 @@ void setup() {
     ks.load();
 
     offscreen = createGraphics(width, height, P3D);
-
     calibrator = new SandboxCalibrator();
-    imageLayer = new SandboxImageLayer(loadImage("girlwithbunny-closeup.jpg"), 100, 100, 100, 100, 790);
 
-    catImageLayer = new SandboxImageLayer(loadImage("cat.jpg"), 300, 100, 100, 100, 750);
-
-    catShitImageLayer = new SandboxImageLayer(loadImage("cat-shit.png"), 100, 100, 300, 250, 770);
+    hot[0] = new HotRegion("hot 1", 50, 50, 50, 50, 750);
+    hot[1] = new HotRegion("hot 2", 100, 100, 50, 50, 750);
+    hot[2] = new HotRegion("hot 3", 150, 150, 50, 50, 750);
+    hot[3] = new HotRegion("hot 4", 200, 200, 50, 50, 750);
+    hot[4] = new HotRegion("hot 2", 250, 250, 50, 50, 750);
 }
 
 void draw() {
@@ -48,41 +49,19 @@ void draw() {
     offscreen.beginDraw();
     offscreen.background(0);
 
-    // Draw depth data as color green to red
-    /*
-  int steps = 10;
-     offscreen.noStroke();
-     color fromColor = color(0, 255, 0);
-     color toColor = color(255, 0, 0);
-     for (int y=0; y < croppedHeight; y+=steps) {
-     for (int x=0; x < croppedWidth; x+=steps) {
-     
-     int index = x + y * croppedWidth;
-     offscreen.fill (lerpColor(fromColor, toColor, map(depthMap[index], 720, 800, 0, 1)));
-     offscreen.rect(map(x, 0, croppedWidth, 0, width), map(y, 0, croppedHeight, 0, height), 20, 20);
-     // println(x, y, depthMap[index]);
-     }
-     } 
-     */
-    // Draw depth image
-    /*  
-     offscreen.pushMatrix();
-     offscreen.scale(width*1.0/depthImage.width, height*1.0/depthImage.height);
-     offscreen.image(depthImage, 0, 0);//, width, height);
-     offscreen.popMatrix();
-     */
 
 
     // Regions are defined in the original image reference (640x480) so we need to scale them
     offscreen.pushMatrix();
     offscreen.scale(width*1.0/calibrator.depthImage.width, height*1.0/calibrator.depthImage.height);
-    imageLayer.run(calibrator.depthImage, calibrator.realWorldMap);
-    imageLayer.draw(offscreen);
-    catImageLayer.run(calibrator.depthImage, calibrator.realWorldMap);
-    catImageLayer.draw(offscreen);
-
-    catShitImageLayer.run(calibrator.depthImage, calibrator.realWorldMap);
-    catShitImageLayer.draw(offscreen);
+    
+   /* for (int i = 0; i < hot.length; i++) {
+        hot[i].run(calibrator.depthImage, calibrator.realWorldMap);
+        hot[i].draw(offscreen);
+    }*/
+    hot[currentRegion].run(calibrator.depthImage, calibrator.realWorldMap);
+    hot[currentRegion].draw(offscreen);
+    
     offscreen.popMatrix();
 
 
@@ -101,7 +80,11 @@ void draw() {
     offscreen.textSize(63);
     offscreen.text(""+calibrator.realWorldMap[mY*calibrator.croppedWidth+mX].z, surfaceMouse.x, surfaceMouse.y);
 
-
+    
+    if (hot[currentRegion].isStable() && hot[currentRegion].getState() == HotRegionState.FULLY_VISIBLE) {
+        currentRegion = (currentRegion+1)%hot.length;
+    }
+    
     offscreen.endDraw();
 
     background(0);
