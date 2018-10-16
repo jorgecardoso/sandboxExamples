@@ -7,10 +7,11 @@ Keystone ks;
 CornerPinSurface surface;
 
 PGraphics offscreen;
+PImage background;
 
 SandboxCalibrator calibrator;
 
-SandboxImageLayer imageLayer, catImageLayer, catShitImageLayer;
+SandboxImageLayer imageLayer, imageLayer2;
 
 void setup() {
     fullScreen(P3D, 2); // 2 - second screen (projector) must be in extend mode
@@ -33,11 +34,11 @@ void setup() {
     offscreen = createGraphics(width, height, P3D);
 
     calibrator = new SandboxCalibrator();
-    imageLayer = new SandboxImageLayer(loadImage("girlwithbunny-closeup.jpg"), 100, 100, 100, 100, 790);
+    imageLayer = new SandboxImageLayer(loadImage("mosaic1.jpg"), 450, 310, 100, 100, 775);
+    imageLayer2 = new SandboxImageLayer(loadImage("mosaic2.png"), 200, 260, 70, 140, 775);
 
-    catImageLayer = new SandboxImageLayer(loadImage("cat.jpg"), 300, 100, 100, 100, 750);
-
-    catShitImageLayer = new SandboxImageLayer(loadImage("cat-shit.png"), 100, 100, 300, 250, 770);
+    
+    background = loadImage("aereal-sandbox1.png");
 }
 
 void draw() {
@@ -48,41 +49,19 @@ void draw() {
     offscreen.beginDraw();
     offscreen.background(0);
 
-    // Draw depth data as color green to red
-    /*
-  int steps = 10;
-     offscreen.noStroke();
-     color fromColor = color(0, 255, 0);
-     color toColor = color(255, 0, 0);
-     for (int y=0; y < croppedHeight; y+=steps) {
-     for (int x=0; x < croppedWidth; x+=steps) {
-     
-     int index = x + y * croppedWidth;
-     offscreen.fill (lerpColor(fromColor, toColor, map(depthMap[index], 720, 800, 0, 1)));
-     offscreen.rect(map(x, 0, croppedWidth, 0, width), map(y, 0, croppedHeight, 0, height), 20, 20);
-     // println(x, y, depthMap[index]);
-     }
-     } 
-     */
-    // Draw depth image
-    /*  
-     offscreen.pushMatrix();
-     offscreen.scale(width*1.0/depthImage.width, height*1.0/depthImage.height);
-     offscreen.image(depthImage, 0, 0);//, width, height);
-     offscreen.popMatrix();
-     */
-
+    // draw background
+    offscreen.image(background, 0, 0, width, height);
+    
 
     // Regions are defined in the original image reference (640x480) so we need to scale them
     offscreen.pushMatrix();
     offscreen.scale(width*1.0/calibrator.depthImage.width, height*1.0/calibrator.depthImage.height);
     imageLayer.run(calibrator.depthImage, calibrator.realWorldMap);
     imageLayer.draw(offscreen);
-    catImageLayer.run(calibrator.depthImage, calibrator.realWorldMap);
-    catImageLayer.draw(offscreen);
-
-    catShitImageLayer.run(calibrator.depthImage, calibrator.realWorldMap);
-    catShitImageLayer.draw(offscreen);
+    
+    imageLayer2.run(calibrator.depthImage, calibrator.realWorldMap);
+    imageLayer2.draw(offscreen);
+    
     offscreen.popMatrix();
 
 
